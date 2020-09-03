@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yjl.mapper.UserManageMapper">
+
+    <!--添加权限 -->
+    <insert id="add" parameterType="com.yjl.pojo.User">
+        <!--通过mybatis框架提供的selectKey标签获得自增产生的ID值-->
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into t_user(username,password,gender,birthday,telephone,station,remark)
+        VALUES
+        (#{username},#{password},#{gender},#{birthday},#{telephone},#{station},#{remark})
+    </insert>
+    <!--绑定用户和角色多对多关系-->
+    <insert id="setUserAndRole" parameterType="map">
+        insert into t_user_role(user_id,role_id)
+        values
+        (#{userId},#{roleId})
+    </insert>
+    <update id="exit" parameterType="com.yjl.pojo.User">
+        update t_user
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="gender != null">
+                gender = #{gender},
+            </if>
+            <if test="birthday != null">
+                birthday = #{birthday},
+            </if>
+            <if test="telephone != null">
+                telephone = #{telephone},
+            </if>
+            <if test="station != null">
+                station = #{station},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where id =#{id}
+    </update>
+    <delete id="deleteAssoication">
+        delete  from t_user_role where user_id=#{id}
+    </delete>
+    <delete id="deleteById">
+        delete   from t_user where id=#{id}
+    </delete>
+
+    <!-- 分页查询-->
+    <select id="selectByCondition" parameterType="string" resultType="com.yjl.pojo.User">
+        select * from t_user
+        <if test="value != null and value.length > 0">
+            where remark = #{value} or username = #{value}
+        </if>
+    </select>
+    <!-- 根据id查询用户信息-->
+    <select id="findById" parameterType="int" resultType="com.yjl.pojo.User">
+        select * from t_user
+        where id=#{id}
+    </select>
+    <!-- 根据用户id查询关联的多个角色id，查询中间表-->
+    <select id="findUserIdsAndRoleId" resultType="java.lang.Integer" parameterType="int">
+        select role_id from t_user_role where user_id =#{id}
+    </select>
+</mapper>
