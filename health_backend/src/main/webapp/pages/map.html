@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>传智健康</title>
+    <meta name="description" content="传智健康">
+    <meta name="keywords" content="传智健康">
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 178px;
+            height: 178px;
+            line-height: 178px;
+            text-align: center;
+        }
+        .avatar {
+            width: 178px;
+            height: 178px;
+            display: block;
+        }
+        .datatable {
+            position: relative;
+            box-sizing: border-box;
+            -webkit-box-flex: 1;
+            width: 100%;
+            max-width: 100%;
+            font-size: 14px;
+            color: rgb(96, 98, 102);
+            overflow: hidden;
+            flex: 1 1 0%;
+        }
+        .datatable td, .datatable th {
+            padding: 12px 0;
+            min-width: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+            position: relative;
+            text-align: left;
+        }
+        .tangram-suggestion-main{
+            z-index: 9999;
+        }
+    </style>
+    <!--引入百度样式-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        body, html{width: 100%;height: 100%; margin:0;font-family:"微软雅黑";}
+        #l-map{height:500px;width:100%;}
+        #m-map{height:300px;width:100px;}
+        #r-result{width:100%;}
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=awDpnZaxxBWWTgZIxm38CnhKZFoWZ321"></script>
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>首页<small>公司分布图</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>工作台</el-breadcrumb-item>
+            <el-breadcrumb-item>公司分布图</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+    <div class="add-form">
+        <template>
+            <el-tabs  v-model="activeName_map" type="card" @tab-click="handleClick">
+
+                <el-tab-pane label="分布图" name="first" :key="'first'">
+                    <div id="l-map" @click="baiduMap()"></div>
+                </el-tab-pane>
+
+                <el-tab-pane label="详细信息" name="second" :key="'second'">
+
+                    <div class="app-container">
+                        <div class="box">
+                            <div class="filter-container">
+                                <el-input placeholder="公司名称" v-model="pagination.queryString" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"></el-input>
+                                <el-button @click="findPage(1)" class="dalfBut">查询</el-button>
+                                <el-button type="primary" class="butT" @click="handleCreate()">新建</el-button>
+                            </div>
+                            <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                                <el-table-column type="index" align="center" label="序号"></el-table-column>
+                                <el-table-column prop="name" label="公司地址" align="center"></el-table-column>
+                                <el-table-column prop="xoffse" label="所在经度" align="center"></el-table-column>
+                                <el-table-column prop="yoffse" label="所在维度" align="center"></el-table-column>
+                                <el-table-column label="操作" align="center">
+                                    <template slot-scope="scope">
+                                        <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+
+
+                            <!--设置分页展示的容器和展示时机-->
+                            <div class="pagination-container">
+                                <el-pagination
+                                        class="pagiantion"
+                                        @current-change="handleCurrentChange"
+                                        :current-page="pagination.currentPage"
+                                        :page-size="pagination.pageSize"
+                                        layout="total, prev, pager, next, jumper"
+                                        :total="pagination.total">
+                                </el-pagination>
+                            </div>
+
+                            <!-- 新增标签弹层 -->
+                            <div class="add-form">
+                                <!--这里的dialogForVisible来控制是否显示-->
+                                <el-dialog title="新增地址" :visible.sync="dialogFormVisible" @opened="alreadyShowDialog">
+
+                                    <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px" style="overflow: hidden">
+
+                                        <el-col :span="24">
+                                            <el-form-item label="新增地址:">
+                                                <div id="r-result"><input type="text" id="suggestId" size="20" value="请输入地址" style="width:150px;" />
+                                                    <el-button type="primary" size="mini" @click="addAddress()">确定</el-button>
+                                                </div>
+
+                                                <div id="m-map" style="width: 100%"></div>
+                                                <div id="searchResultPanel" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+                                            </el-form-item>
+                                        </el-col>
+
+                                    </el-form>
+
+                                </el-dialog>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </el-tab-pane>
+
+            </el-tabs>
+        </template>
+    </div>
+</div>
+</body>

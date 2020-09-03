@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>传智健康</title>
+    <meta name="description" content="传智健康">
+    <meta name="keywords" content="传智健康">
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>权限管理
+            <small>权限管理</small>
+        </h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>权限管理</el-breadcrumb-item>
+            <el-breadcrumb-item>权限管理</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div class="filter-container">
+                <el-input placeholder="权限名/权限关键词" v-model="pagination.queryString" style="width: 200px;"
+                          class="filter-item"></el-input>
+                <el-button @click="findPage()" class="dalfBut">查询</el-button>
+                <el-button type="primary" class="butT" @click="handleCreate()">新建权限</el-button>
+            </div>
+            <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                <el-table-column type="index" align="center" label="序号"></el-table-column>
+                <el-table-column prop="name" label="权限名" align="center"></el-table-column>
+                <el-table-column prop="keyword" label="权限关键词" align="center"></el-table-column>
+                <el-table-column prop="description" label="权限描述" align="center"></el-table-column>
+                <el-table-column label="操作" align="center">
+                    <template slot-scope="scope">
+                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+                        <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="pagination-container">
+                <!--为分页条组件绑定current-change事件，当页码改变时触发-->
+                <el-pagination
+                        class="pagiantion"
+                        @current-change="handleCurrentChange"
+                        :current-page="pagination.currentPage"
+                        :page-size="pagination.pageSize"
+                        layout="total, prev, pager, next, jumper"
+                        :total="pagination.total">
+                </el-pagination>
+            </div>
+            <!-- 新增标签弹层 -->
+            <div class="add-form">
+                <!--这里的dialogForVisible来控制是否显示-->
+                <el-dialog title="新增权限" :visible.sync="dialogFormVisible">
+                    <el-form ref="dataAddForm" :model="formData" :rules="rules" label-position="right"
+                             label-width="100px">
+                        <el-row>
+                            <el-col :span="12">
+                                <!--这里的prop是校验规则-->
+                                <el-form-item label="权限名" prop="name">
+                                    <el-input v-model="formData.name"/>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="12">
+                                <!--这里的prop是校验规则-->
+                                <el-form-item label="权限关键词" prop="keyword">
+                                    <el-input v-model="formData.keyword"/>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-form-item label="权限描述">
+                                    <el-input v-model="formData.description"/>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-form-item label="注意事项">
+                                    <el-input v-model="formData.attention" type="textarea"></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible = false">取消</el-button>
+                        <el-button type="primary" @click="handleAdd()">确定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+            <!-- 编辑标签弹层 -->
+            <div class="add-form">
+                <!--这里的dialogFormVisible4Edit来控制是否显示-->
+                <el-dialog title="修改权限" :visible.sync="dialogFormVisible4Edit">
+                    <el-form ref="dataEditForm" :model="formData" :rules="rules" label-position="right"
+                             label-width="100px">
+                        <el-row>
+                            <el-col :span="12">
+                                <!--这里的prop是校验规则-->
+                                <el-form-item label="权限名" prop="name">
+                                    <el-input v-model="formData.name"/>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="12">
+                                <!--这里的prop是校验规则-->
+                                <el-form-item label="权限关键词" prop="keyword">
+                                    <el-input v-model="formData.keyword"/>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-form-item label="权限描述">
+                                    <el-input v-model="formData.description"/>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-form-item label="注意事项">
+                                    <el-input v-model="formData.attention" type="textarea"></el-input>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+                        <el-button type="primary" @click="handleEdit()">确定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            pagination: {//分页相关的初始参数，注意currentPage会改变
+                currentPage: 1,//当前页码
+                pageSize: 10,//每页显示的记录数
+                total: 0,//总记录数
+                queryString: null//查询条件
+            },
+            dataList: [],//当前页要展示的分页列表数据
+            formData: {},//表单数据
+            tableData: [],//新增和编辑表单中对应的检查项列表数据
+            dialogFormVisible: false,//点击新建的表单是否可见
+            dialogFormVisible4Edit: false,//编辑表单是否可见
+            rules: {
+                //校验规则
+                name: [{required: true, message: '权限名为必填项', trigger: 'blur'}],
+                keyword: [{required: true, message: '权限关键词为必填项', trigger: 'blur'}]
+            }
+           /* return: {
+                openlsDisabled: false,
+                closelsDisabled: false,
+            }*/
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created() {
+            this.findPage();//VUE对象初始化完成后调用分页查询方法，完成分页查询
+        },
+        methods: {
+            //编辑
+            handleEdit() {
+                //进行表单校验
+                this.$refs['dataEditForm'].validate((valid) => {
+                    if (valid) {
+                        //表单校验通过，可以提交数据
+                        axios.post("/permissionManage/edit.do", this.formData).then((res) => {
+                            if (res.data.flag) {
+                                //弹出成功提示信息
+                                this.$message({
+                                    type: 'success',
+                                    message: res.data.message
+                                });
+                            } else {
+                                //执行失败
+                                this.$message.error(res.data.message);
+                            }
+                        }).finally(() => {
+                            //不管成功还是失败，都调用分页查询方法
+                            this.findPage();
+                            //隐藏编辑窗口
+                            this.dialogFormVisible4Edit = false;
+                        });
+                    } else {
+                        //表单校验不通过
+                        this.$message.error("表单数据校验失败!");
+                        return false;
+                    }
+                });
+            },
+            //添加表单数据
+            handleAdd() {
+                //校验表单输入项是否合法
+                //箭头函数=>进行校验
+                this.$refs['dataAddForm'].validate((valid) => {
+                    if (valid) {
+                        //表单数据校验通过，然后就发送ajax，then方法为回调函数
+                        axios.post("/permissionManage/add.do", this.formData).then((response) => {
+                            //判断后台返回的flag值，true代表添加成功，false代表添加失败
+                            //result结果集的json数据，注意data为固定写法，取到其中的flag的属性，
+                            if (response.data.flag) {
+                                //成功，然后在ajax请求体中加入message
+                                this.$message({
+                                    message: response.data.message,
+                                    type: "success"
+                                });
+                            } else {
+                                this.$message.error(response.data.message);
+                            }
+                        }).finally(() => {
+                            //执行完这个新增动作后，无论成功失败，重新刷新整个分页
+                            this.findPage();
+                            //无论成功失败，都需要隐藏新键的窗口
+                            this.dialogFormVisible = false;
+                        });
+                    } else {
+                        //校验不通过
+                        this.$message.error("表单数据校验失败");
+                        //停止代码执行
+                        return false;
+                    }
+                });
+            },
+            //分页查询
+            findPage(thePage) {
+                //发送ajax请求，提交分页参数最后处理查询结果
+                //分页参数
+                var param = {
+                    currentPage: this.pagination.currentPage,//页码
+                    pageSize: this.pagination.pageSize,//每页显示的记录数
+                    queryString: this.pagination.queryString//查询条件
+                };
+                //请求后台
+                axios.post("/permissionManage/findPage.do", param).then((response) => {
+                    //为模型数据去赋值，基于vue风格的双向绑定展示到页面
+                    this.dataList = response.data.rows;
+                    this.pagination.total = response.data.total;
+                });
+            },
+            // 重置表单
+            resetForm() {
+                //将表单的数据重置
+                this.formData = {};
+            },
+            // 弹出添加窗口,需要每次点击新建时、都清空表单输入项
+            handleCreate() {
+                //调用重置方法，让每一次弹出新建窗口都是新的，没有数据的
+                this.resetForm();
+                //把属性改为true，形成点击弹出的事件
+                this.dialogFormVisible = true;
+            },
+            // 弹出编辑窗口
+            handleUpdate(row) {
+                this.dialogFormVisible4Edit = true;
+                //回显数据，发送ajax请求根据id查询当前检查项的数据
+                axios.get("/permissionManage/findById.do?id=" + row.id).then((response) => {
+                    if (response.data.flag) {
+                        //进行回写，基于vue的双向数据绑定实现
+                        this.formData = response.data.data;
+                    } else {
+                        //查询失败，弹出提示
+                        this.$message.error("获取数据失败，请刷新当前页面");
+                    }
+                });
+            },
+            //切换页码
+            handleCurrentChange(currentPage) {
+                //currentPage为切换后的页码,前端传回来
+                this.pagination.currentPage = currentPage;
+                this.findPage();
+            },
+
+            // 权限不足提示
+            showMessage(r) {
+                if (r == 'Error: Request failed with status code 403') {
+                    //权限不足
+                    this.$message.error('无访问权限');
+                    return;
+                } else {
+                    this.$message.error('未知错误');
+                    return;
+                }
+            },
+            //开关
+            openBoxCabin() {
+                this.openlsDisabled = false;
+                this.closelsDisabled = true;
+            },
+            closeBoxCabin() {
+                this.openlsDisabled = true;
+                this.closelsDisabled = false;
+            },
+            // 删除
+            handleDelete(row) {//row其实是一个json对象，json对象的结构为{"age":"0-100","attention":"无","code":"0011","id":38,"name":"白细胞计数","price":10.0,"remark":"白细胞计数","sex":"0","type":"2"}
+                //alert(row.id);
+                this.$confirm("你确定要删除当前数据吗？", "提示", {//确认框
+                    type: 'warning'
+                }).then(() => {
+                    //用户点击确定按钮，发送ajax请求，将检查项ID提交到Controller进行处理
+                    axios.get("/permissionManage/delete.do?id=" + row.id).then((res) => {
+                        if (res.data.flag) {
+                            //执行成功
+                            //弹出成功提示信息
+                            this.$message({
+                                type: 'success',
+                                message: res.data.message
+                            });
+                            //重新进行分页查询
+                            this.findPage();
+                        } else {
+                            //执行失败
+                            this.$message.error(res.data.message);
+                        }
+                    }).catch((r) => {
+                        this.showMessage(r);
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '操作已取消'
+                    });
+                });
+            }
+        }
+    })
+</script>
+
+</html>
